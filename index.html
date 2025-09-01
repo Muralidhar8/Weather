@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pro Weather App</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80'); /* ✅ Default background */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      color: white;
+    }
+    nav {
+      background-color: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(6px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    nav h2 {
+      color: white;
+      font-weight: bold;
+    }
+    nav a {
+      text-decoration: none;
+      color: white;
+      margin-left: 1rem;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+    nav a:hover {
+      color: #ffd54f;
+    }
+    .page {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      flex: 1;
+    }
+    .page.active {
+      display: flex;
+    }
+    .container {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 2rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .input-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 0.7rem;
+      font-size: 1rem;
+      border-radius: 0.7rem;
+      border: none;
+      outline: none;
+    }
+    button {
+      padding: 0.7rem 1.2rem;
+      background-color: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 0.7rem;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      background-color: #f57c00;
+      transform: scale(1.05);
+    }
+    .weather-result {
+      margin-top: 1rem;
+    }
+    .temp {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin: 0.5rem 0;
+    }
+    .icon {
+      width: 100px;
+      height: 100px;
+      animation: bounce 1s infinite alternate;
+    }
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-10px); }
+    }
+    .error {
+      color: #ff5252;
+      font-weight: bold;
+      margin-top: 1rem;
+    }
+    footer {
+      background: rgba(0, 0, 0, 0.5);
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <h2>Pro Weather</h2>
+    <div>
+      <a href="#" onclick="showPage('home')">Home</a>
+      <a href="#" onclick="showPage('weather')">Weather</a>
+      <a href="#" onclick="showPage('about')">About</a>
+    </div>
+  </nav>
+
+  <div id="home" class="page active">
+    <div class="container">
+      <h1>Welcome to Pro Weather</h1>
+      <p>Get real-time weather updates in a clean, vibrant UI.</p>
+    </div>
+  </div>
+
+  <div id="weather" class="page">
+    <div class="container">
+      <h2>Check Weather</h2>
+      <div class="input-group">
+        <input type="text" id="cityInput" placeholder="Enter city name" />
+        <button onclick="getWeather()">Get Weather</button>
+      </div>
+      <div class="weather-result" id="weatherResult"></div>
+      <div class="error" id="error"></div>
+    </div>
+  </div>
+
+  <div id="about" class="page">
+    <div class="container">
+      <h2>About This Project</h2>
+      <p>This is a vibrant and responsive weather web app created using HTML, CSS, and JavaScript, integrated with the OpenWeatherMap API.</p>
+      <p>Developed as a mini-project for educational demonstration.</p>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Pro Weather. All rights reserved.</p>
+  </footer>
+
+  <script>
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    async function getWeather() {
+      const city = document.getElementById('cityInput').value.trim();
+      const weatherResult = document.getElementById('weatherResult');
+      const error = document.getElementById('error');
+      weatherResult.innerHTML = '';
+      error.textContent = '';
+
+      if (!city) {
+        error.textContent = 'Please enter a city name';
+        return;
+      }
+
+      try {
+        const apiKey = '16ca932b75f5c3bc557f60e99a13aad0';
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+        if (!response.ok) throw new Error('City not found');
+        const data = await response.json();
+        const iconUrl = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+
+        const temp = data.main.temp;
+        const desc = data.weather[0].main.toLowerCase();
+
+        // ✅ Attractive Unsplash images for conditions
+        let bgImg = "";
+        if (desc.includes("cloud")) {
+          bgImg = "url('https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=1600&q=80')";
+        } else if (desc.includes("rain")) {
+          bgImg = "url('https://images.unsplash.com/photo-1504386106331-3e4e71712b38?auto=format&fit=crop&w=1600&q=80')";
+        } else if (desc.includes("clear") && temp > 25) {
+          bgImg = "url('https://images.unsplash.com/photo-1501973801540-537f08ccae7b?auto=format&fit=crop&w=1600&q=80')";
+        } else if (temp <= 15) {
+          bgImg = "url('https://images.unsplash.com/photo-1608889173721-8fa0bca9e507?auto=format&fit=crop&w=1600&q=80')";
+        } else {
+          bgImg = "url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80')";
+        }
+
+        // ✅ Apply only image (no gradient/white screen)
+        document.body.style.backgroundImage = bgImg;
+
+        weatherResult.innerHTML = `
+          <img src="${iconUrl}" alt="Weather Icon" class="icon" />
+          <p class="temp">${Math.round(temp)}°C</p>
+          <p>${data.weather[0].description}</p>
+          <p><strong>${data.name}, ${data.sys.country}</strong></p>
+        `;
+      } catch (err) {
+        error.textContent = err.message;
+      }
+    }
+  </script>
+</body>
+</html>
